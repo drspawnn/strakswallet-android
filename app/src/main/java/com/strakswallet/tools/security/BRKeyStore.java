@@ -19,7 +19,6 @@ import android.util.Log;
 import android.view.View;
 
 import com.strakswallet.R;
-import com.strakswallet.presenter.activities.WalletActivity;
 import com.strakswallet.presenter.activities.intro.IntroActivity;
 import com.strakswallet.tools.exceptions.BRKeystoreErrorException;
 import com.strakswallet.presenter.customviews.BRDialogView;
