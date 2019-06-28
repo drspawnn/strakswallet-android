@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -36,6 +37,7 @@ public class SettingsActivity extends BRActivity {
     private ListView listView;
     public List<BRSettingsItem> items;
     public int startPosition=10;
+    public Parcelable scrollSTATE;
     public static boolean appVisible = false;
     private static SettingsActivity app;
 
@@ -145,6 +147,10 @@ public class SettingsActivity extends BRActivity {
         populateItems();
 
         listView.setAdapter(new SettingsListAdapter(this, R.layout.settings_list_item, items));
+
+        if(scrollSTATE != null) {
+            listView.onRestoreInstanceState(scrollSTATE);
+        }
     }
 
     @Override
@@ -291,5 +297,6 @@ public class SettingsActivity extends BRActivity {
     protected void onPause() {
         super.onPause();
         appVisible = false;
+        scrollSTATE = listView.onSaveInstanceState();
     }
 }
