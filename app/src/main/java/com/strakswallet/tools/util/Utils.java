@@ -172,11 +172,12 @@ public class Utils {
         FingerprintManager fingerprintManager = (FingerprintManager) app.getSystemService(FINGERPRINT_SERVICE);
         if (fingerprintManager == null) return false;
         // Device doesn't support fingerprint authentication
-        if (ActivityCompat.checkSelfPermission(app, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(app, "Fingerprint authentication permission not enabled", Toast.LENGTH_LONG).show();
-            return false;
+        if (fingerprintManager.isHardwareDetected()) {
+            if (ActivityCompat.checkSelfPermission(app, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(app, "Fingerprint authentication permission not enabled", Toast.LENGTH_LONG).show();
+            } else return true;
         }
-        return fingerprintManager.isHardwareDetected();
+        return false;
     }
 
     public static void hideKeyboard(Context app) {
