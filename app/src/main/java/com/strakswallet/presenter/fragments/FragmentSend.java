@@ -401,7 +401,7 @@ public class FragmentSend extends Fragment {
             public void onClick(View v) {
                 if (!BRAnimator.isClickAllowed()) return;
                 saveMetaData();
-                BRAnimator.openScanner(getActivity(), BRConstants.SCANNER_REQUEST);
+                BRAnimator.openScanner(getActivity());
 
             }
         });

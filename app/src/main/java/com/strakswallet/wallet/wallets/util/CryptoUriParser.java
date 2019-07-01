@@ -224,7 +224,7 @@ public class CryptoUriParser {
 
             switch (host) {
                 case "scanqr":
-                    BRAnimator.openScanner((Activity) app, BRConstants.SCANNER_REQUEST);
+                    BRAnimator.openScanner((Activity) app);
                     break;
                 case "addressList":
                     //todo implement
