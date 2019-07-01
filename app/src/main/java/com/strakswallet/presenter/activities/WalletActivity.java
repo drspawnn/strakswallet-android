@@ -1,5 +1,6 @@
 package com.strakswallet.presenter.activities;
 
+import android.Manifest;
 import android.animation.LayoutTransition;
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -7,6 +8,7 @@ import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.Uri;
@@ -17,6 +19,7 @@ import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.constraint.ConstraintSet;
 import android.support.transition.TransitionManager;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
@@ -27,10 +30,12 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 import android.widget.ViewFlipper;
 
 import com.strakswallet.R;
 import com.strakswallet.core.BRCorePeer;
+import com.strakswallet.presenter.activities.camera.ScanQRActivity;
 import com.strakswallet.presenter.activities.settings.WebViewActivity;
 import com.strakswallet.presenter.activities.util.BRActivity;
 import com.strakswallet.presenter.customviews.BRButton;
@@ -667,6 +672,29 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
         return true;
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case BRConstants.CAMERA_REQUEST_ID:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "Camera permission GRANTED");
+                    Intent intent = new Intent(app, ScanQRActivity.class);
+                    app.startActivityForResult(intent, BRConstants.SCANNER_REQUEST);
+                    app.overridePendingTransition(R.anim.fade_up, R.anim.fade_down);
+                }
+                // Check, "Never ask again"
+                else if (!ActivityCompat.shouldShowRequestPermissionRationale(app, Manifest.permission.CAMERA))
+                    BRDialog.showCustomDialog(app, app.getString(R.string.Send_cameraUnavailabeTitle_android), app.getString(R.string.Send_cameraUnavailabeMessage_android), app.getString(R.string.AccessibilityLabels_close), null, new BRDialogView.BROnClickListener() {
+                        @Override
+                        public void onClick(BRDialogView brDialogView) {
+                            brDialogView.dismiss();
+                        }
+                    }, null, null, 0);
+                else
+                    Toast.makeText(app,"Camera permission DENIED",Toast.LENGTH_SHORT).show();
+                break;
+        }
+    }
 
     //test logger
     class TestLogger extends Thread {
