@@ -4,8 +4,10 @@ import android.app.Activity;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 
 
@@ -39,10 +41,16 @@ public class BRNotificationManager {
 
     public static void sendNotification(Activity ctx, int icon, String title, String message, int mId) {
         if (ctx == null) return;
+        Uri soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + ctx.getPackageName() + "/raw/coinflip");
+        String channelId = "straks_notification_channel";
+
         NotificationCompat.Builder mBuilder =
-                new NotificationCompat.Builder(ctx)
+                new NotificationCompat.Builder(ctx, channelId)
                         .setSmallIcon(icon)
                         .setContentTitle(title)
+                        .setSound(soundUri)
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setAutoCancel(true)    // for remove notification after click
                         .setContentText(message);
         // Creates an explicit intent for an Activity in your app
         Intent resultIntent = new Intent(ctx, ctx.getClass());
