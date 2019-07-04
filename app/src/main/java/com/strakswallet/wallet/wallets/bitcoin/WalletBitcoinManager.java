@@ -753,22 +753,15 @@ public class WalletBitcoinManager extends BRCoreWalletManager implements BaseWal
                         public void run() {
                             if (!BRToast.isToastShown()) {
                                 if (Utils.isEmulatorOrDebug(ctx))
+                                    Toast.makeText(ctx,strToShow,Toast.LENGTH_SHORT).show();
+                                else
                                     BRToast.showCustomToast(ctx, strToShow,
-                                            BreadApp.DISPLAY_HEIGHT_PX / 2, Toast.LENGTH_LONG, R.drawable.toast_layout_black);
-                                AudioManager audioManager = (AudioManager) ctx.getSystemService(Context.AUDIO_SERVICE);
-                                if (audioManager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL) {
-                                    final MediaPlayer mp = MediaPlayer.create(ctx, R.raw.coinflip);
-                                    if (mp != null) try {
-                                        mp.start();
-                                    } catch (IllegalArgumentException ex) {
-                                        Log.e(TAG, "run: ", ex);
-                                    }
-                                }
+                                            10, Toast.LENGTH_LONG, R.drawable.toast_layout_orange);
+
                                 BRNotificationManager.sendNotification((Activity) ctx, R.drawable.notification_icon, ctx.getString(R.string.app_name), strToShow, 1);
                             }
                         }
-                    }, 1000);
-
+                    }, 500);
 
                 }
             });
