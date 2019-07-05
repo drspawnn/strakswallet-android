@@ -1,12 +1,14 @@
 package com.strakswallet.tools.manager;
 
 import android.app.Activity;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioAttributes;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 
@@ -72,6 +74,25 @@ public class BRNotificationManager {
         mBuilder.setContentIntent(resultPendingIntent);
         NotificationManager mNotificationManager =
                 (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            String channelDescription = "Straks Notification Channel";
+
+            NotificationChannel notificationChannel = mNotificationManager.getNotificationChannel(channelId);
+            // DON'T FORGET : If you want to change something on Notification Channel settings,
+            // you must delete previous channel or uninstall application or use new channelId name.
+            if (notificationChannel == null) {
+                AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                        .build();
+
+                notificationChannel = new NotificationChannel(channelId, channelDescription, NotificationManager.IMPORTANCE_DEFAULT);
+                notificationChannel.setSound(soundUri, audioAttributes);
+                mNotificationManager.createNotificationChannel(notificationChannel);
+            }
+        }
+
         // mId allows you to update the notification later on.
         mNotificationManager.notify(mId, mBuilder.build());
     }
