@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.constraint.ConstraintSet;
@@ -33,6 +34,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
 
+import com.strakswallet.BreadApp;
 import com.strakswallet.R;
 import com.strakswallet.core.BRCorePeer;
 import com.strakswallet.presenter.activities.camera.ScanQRActivity;
@@ -43,6 +45,7 @@ import com.strakswallet.presenter.customviews.BRDialogView;
 import com.strakswallet.presenter.customviews.BRNotificationBar;
 import com.strakswallet.presenter.customviews.BRSearchBar;
 import com.strakswallet.presenter.customviews.BRText;
+import com.strakswallet.presenter.customviews.BRToast;
 import com.strakswallet.tools.animation.BRAnimator;
 import com.strakswallet.tools.animation.BRDialog;
 import com.strakswallet.tools.manager.BRSharedPrefs;
@@ -672,6 +675,17 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
         return true;
     }
 
+    // Results from APPLICATION_DETAILS_SETTINGS
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch(requestCode) {
+            case 1:
+                // try open scanner again
+                BRAnimator.openScanner(this);
+                break;
+        }
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
@@ -684,14 +698,26 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
                 }
                 // Check, "Never ask again"
                 else if (!ActivityCompat.shouldShowRequestPermissionRationale(app, Manifest.permission.CAMERA))
-                    BRDialog.showCustomDialog(app, app.getString(R.string.Send_cameraUnavailabeTitle_android), app.getString(R.string.Send_cameraUnavailabeMessage_android), app.getString(R.string.AccessibilityLabels_close), null, new BRDialogView.BROnClickListener() {
-                        @Override
-                        public void onClick(BRDialogView brDialogView) {
-                            brDialogView.dismiss();
-                        }
-                    }, null, null, 0);
+                    BRDialog.showCustomDialog(app, getString(R.string.Send_cameraUnavailabeTitle_android), getString(R.string.Send_cameraUnavailabeMessage_android),
+                            getString(R.string.Button_settings), getString(R.string.Button_cancel), new BRDialogView.BROnClickListener() {
+                                @Override
+                                public void onClick(BRDialogView brDialogView) {
+                                    //Start security settings for user
+                                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                    Uri uri = Uri.fromParts("package", getPackageName(), null);
+                                    intent.setData(uri);
+                                    startActivityForResult(intent, 1);
+                                    brDialogView.dismiss();
+                                }
+                            }, new BRDialogView.BROnClickListener() {
+                                @Override
+                                public void onClick(BRDialogView brDialogView) {
+                                    brDialogView.dismissWithAnimation();
+                                }
+                            }, null, 0, true);
                 else
-                    Toast.makeText(app,"Camera permission DENIED",Toast.LENGTH_SHORT).show();
+                    BRToast.showCustomToast(app, "Camera permission DENIED",
+                            BreadApp.DISPLAY_HEIGHT_PX - 200, Toast.LENGTH_SHORT, R.drawable.toast_layout_red, false);
                 break;
         }
     }
