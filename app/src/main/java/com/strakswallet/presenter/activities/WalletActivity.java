@@ -151,10 +151,6 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
         mBalancePrimary.setTextSize(TypedValue.COMPLEX_UNIT_SP, 28);//make it the size it should be after animation to get the X
         mBalanceSecondary.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);//make it the size it should be after animation to get the X
 
-        BRAnimator.init(this);
-        mBalancePrimary.setTextSize(TypedValue.COMPLEX_UNIT_SP, 28);//make it the size it should be after animation to get the X
-        mBalanceSecondary.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);//make it the size it should be after animation to get the X
-
 
         mSendButton.setHasShadow(false);
         mSendButton.setOnClickListener(new View.OnClickListener() {
@@ -217,10 +213,8 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
         updateUi();
 //        exchangeTest();
 
-        boolean cryptoPreferred = BRSharedPrefs.isCryptoPreferred(this);
-
-        if (cryptoPreferred) {
-            swap();
+        if (BRSharedPrefs.isCryptoPreferred(this)) {
+            setPriceTags(true, false);
         }
 
         // Check if the "Twilight" screen altering app is currently running
@@ -505,13 +499,16 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
 
         }
 
+        long delay = 0; // if animation false, dont wait
+        if(animate) delay = toolBarConstraintLayout.getLayoutTransition().getDuration(LayoutTransition.CHANGE_APPEARING);
+
         new Handler().postDelayed(
                 new Runnable() {
                     @Override
                     public void run() {
-                        updateUi();
+                        TxManager.getInstance().updateTxList(WalletActivity.this);
                     }
-                }, toolBarConstraintLayout.getLayoutTransition().getDuration(LayoutTransition.CHANGE_APPEARING));
+                }, delay);
     }
 
     @Override
