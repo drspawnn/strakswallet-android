@@ -84,7 +84,7 @@ public class BRActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
-        // 123 is the qrCode result
+        // 201 is the qrCode result
         switch (requestCode) {
 
             case BRConstants.PAY_REQUEST_CODE:
@@ -208,6 +208,10 @@ public class BRActivity extends Activity {
                 }
                 break;
 
+            case BRConstants.CAMERA_SETTINGS_REQUEST:
+                // try open scanner again
+                BRAnimator.openScanner(this);
+                break;
         }
     }
 
