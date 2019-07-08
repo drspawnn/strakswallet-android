@@ -675,17 +675,6 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
         return true;
     }
 
-    // Results from APPLICATION_DETAILS_SETTINGS
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch(requestCode) {
-            case 1:
-                // try open scanner again
-                BRAnimator.openScanner(this);
-                break;
-        }
-    }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
@@ -706,7 +695,7 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
                                     Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                                     Uri uri = Uri.fromParts("package", getPackageName(), null);
                                     intent.setData(uri);
-                                    startActivityForResult(intent, 1);
+                                    startActivityForResult(intent, BRConstants.CAMERA_SETTINGS_REQUEST);
                                     brDialogView.dismiss();
                                 }
                             }, new BRDialogView.BROnClickListener() {
