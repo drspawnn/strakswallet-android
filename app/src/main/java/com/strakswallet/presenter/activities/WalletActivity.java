@@ -19,6 +19,8 @@ import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.constraint.ConstraintSet;
+import android.support.transition.ChangeBounds;
+import android.support.transition.Transition;
 import android.support.transition.TransitionManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.Toolbar;
@@ -407,7 +409,7 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
     }
 
     private void swap() {
-        if (!BRAnimator.isClickAllowed()) return;
+        if (!BRAnimator.isClickAllowedManual(false)) return;
         boolean b = !BRSharedPrefs.isCryptoPreferred(this);
         setPriceTags(b, true);
         BRSharedPrefs.setIsCryptoPreferred(this, b);
@@ -418,18 +420,63 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
         //mBalancePrimary.setTextSize(!cryptoPreferred ? t2Size : t1Size);
         ConstraintSet set = new ConstraintSet();
         set.clone(toolBarConstraintLayout);
+
         if (animate)
-            TransitionManager.beginDelayedTransition(toolBarConstraintLayout);
+            BRExecutor.getInstance().forMainThreadTasks().execute(new Runnable() {
+                @Override
+                public void run() {
+                    ChangeBounds mySwapTransition = new ChangeBounds();
+                    mySwapTransition.addListener(new Transition.TransitionListener() {
+                        @Override
+                        public void onTransitionStart(Transition transition) {
+                        }
+
+                        @Override
+                        public void onTransitionEnd(Transition transition) {
+//                            TxManager.getInstance().updateTxList(WalletActivity.this);
+                            while (BRAnimator.isClickAllowedManual(true));
+                        }
+
+                        @Override
+                        public void onTransitionCancel(Transition transition) {
+                        }
+
+                        @Override
+                        public void onTransitionPause(Transition transition) {
+                        }
+
+                        @Override
+                        public void onTransitionResume(Transition transition) {
+                        }
+                    });
+                    TransitionManager.beginDelayedTransition(toolBarConstraintLayout, mySwapTransition);
+                    TxManager.getInstance().updateTxList(WalletActivity.this);
+
+                }
+            });
+        else
+            BRExecutor.getInstance().forMainThreadTasks().execute(new Runnable() {
+                @Override
+                public void run() {
+                    TxManager.getInstance().updateTxList(WalletActivity.this);
+                }
+            });
+
+
+        if (!cryptoPreferred) {
+            mBalanceSecondary.setTextColor(getResources().getColor(R.color.currency_subheading_color, null));
+            mBalancePrimary.setTextColor(getResources().getColor(R.color.white, null));
+            mBalanceSecondary.setTypeface(FontManager.get(this, "CircularPro-Book.otf"));
+
+        } else {
+            mBalanceSecondary.setTextColor(getResources().getColor(R.color.white, null));
+            mBalancePrimary.setTextColor(getResources().getColor(R.color.currency_subheading_color, null));
+            mBalanceSecondary.setTypeface(FontManager.get(this, "CircularPro-Bold.otf"));
+
+        }
+
         int px8 = Utils.getPixelsFromDps(this, 8);
         int px16 = Utils.getPixelsFromDps(this, 16);
-//
-//        //align first item to parent right
-//        set.connect(!cryptoPreferred ? R.id.balance_secondary : R.id.balance_primary, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, px16);
-//        //align swap symbol after the first item
-//        set.connect(R.id.swap, ConstraintSet.START, !cryptoPreferred ? R.id.balance_secondary : R.id.balance_primary, ConstraintSet.START, px8);
-//        //align second item after swap symbol
-//        set.connect(!cryptoPreferred ? R.id.balance_secondary : R.id.balance_primary, ConstraintSet.START, mSwap.getId(), ConstraintSet.END, px8);
-//
 
         // CRYPTO on RIGHT
         if (cryptoPreferred) {
@@ -486,29 +533,6 @@ public class WalletActivity extends BRActivity implements InternetManager.Connec
 
         }
 
-
-        if (!cryptoPreferred) {
-            mBalanceSecondary.setTextColor(getResources().getColor(R.color.currency_subheading_color, null));
-            mBalancePrimary.setTextColor(getResources().getColor(R.color.white, null));
-            mBalanceSecondary.setTypeface(FontManager.get(this, "CircularPro-Book.otf"));
-
-        } else {
-            mBalanceSecondary.setTextColor(getResources().getColor(R.color.white, null));
-            mBalancePrimary.setTextColor(getResources().getColor(R.color.currency_subheading_color, null));
-            mBalanceSecondary.setTypeface(FontManager.get(this, "CircularPro-Bold.otf"));
-
-        }
-
-        long delay = 0; // if animation false, dont wait
-        if(animate) delay = toolBarConstraintLayout.getLayoutTransition().getDuration(LayoutTransition.CHANGE_APPEARING);
-
-        new Handler().postDelayed(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        TxManager.getInstance().updateTxList(WalletActivity.this);
-                    }
-                }, delay);
     }
 
     @Override
