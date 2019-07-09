@@ -176,7 +176,7 @@ public class LoginActivity extends BRActivity {
                     AuthManager.getInstance().authPrompt(LoginActivity.this, "", "", false, true, new BRAuthCompletion() {
                         @Override
                         public void onComplete() {
-//                            AuthManager.getInstance().authSuccess(LoginActivity.this);
+                            AuthManager.getInstance().authSuccess(LoginActivity.this);
                             unlockWallet();
                         }
 
@@ -194,7 +194,7 @@ public class LoginActivity extends BRActivity {
                 if (fingerPrint != null && useFingerprint)
                     fingerPrint.performClick();
             }
-        }, 500);
+        }, 200);
 
         BreadApp.addOnBackgroundedListener(new BreadApp.OnAppBackgrounded() {
             @Override
@@ -296,7 +296,7 @@ public class LoginActivity extends BRActivity {
                             LoginActivity.this.finish();
                         }
                     }
-                }, 400);
+                }, 100);
             }
         });
         unlockedText.animate().alpha(1f);
@@ -321,7 +321,7 @@ public class LoginActivity extends BRActivity {
                     public void onSuccess() {
                         inputAllowed = false;
                         if (AuthManager.getInstance().checkAuth(pin.toString(), LoginActivity.this)) {
-                            AuthManager.getInstance().authSuccess(LoginActivity.this);
+//                            AuthManager.getInstance().authSuccess(LoginActivity.this);
                             unlockWallet();
                         } else {
                             AuthManager.getInstance().authFail(LoginActivity.this);
