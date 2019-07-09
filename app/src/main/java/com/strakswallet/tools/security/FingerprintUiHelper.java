@@ -29,8 +29,8 @@ import android.widget.TextView;
  */
 public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallback {
 
-    static final long ERROR_TIMEOUT_MILLIS = 1600;
-    static final long SUCCESS_DELAY_MILLIS = 1300;
+    static final long ERROR_TIMEOUT_MILLIS = 1500;
+    static final long SUCCESS_DELAY_MILLIS = 0; // dont need delay on success login??
 
     private final FingerprintManager mFingerprintManager;
     private final ImageView mIcon;
