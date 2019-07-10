@@ -10,7 +10,7 @@ android {
         minSdkVersion 23
         targetSdkVersion 28
         versionCode 202
-        versionName "202"
+        versionName "202-beta"
         multiDexEnabled true
         // Similar to other properties in the defaultConfig block,
         // you can configure the ndk block for each product flavor
