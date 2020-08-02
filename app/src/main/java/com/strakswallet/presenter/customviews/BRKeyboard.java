@@ -63,6 +63,7 @@ public class BRKeyboard extends LinearLayout implements View.OnClickListener {
     private Button numDot;
     private ImageButton numDelete;
     private boolean showAlphabet;
+    private int resID;
 
     public BRKeyboard(Context context) {
         super(context);
@@ -216,7 +217,8 @@ public class BRKeyboard extends LinearLayout implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         for (OnInsertListener listener : listeners) {
-            listener.onClick(v instanceof ImageButton ? "" : ((Button) v).getText().toString());
+            if (v instanceof ImageButton) {v.setBackgroundResource(resID); listener.onClick("");}
+            else listener.onClick(((Button) v).getText().toString());
         }
     }
 
@@ -245,6 +247,7 @@ public class BRKeyboard extends LinearLayout implements View.OnClickListener {
     }
 
     public void setBRButtonBackgroundResId(int resId) {
+        resID = resId;
         num0.setBackgroundResource(resId);
         num1.setBackgroundResource(resId);
         num2.setBackgroundResource(resId);

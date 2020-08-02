@@ -9,8 +9,8 @@ android {
         applicationId = 'com.strakswallet'
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode 202
-        versionName "202-beta"
+        versionCode 210
+        versionName "2.1.0"
         multiDexEnabled true
         // Similar to other properties in the defaultConfig block,
         // you can configure the ndk block for each product flavor
@@ -90,7 +90,7 @@ android {
 
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
-            def project = "STRAKSwallet"
+            def project = "STRAKSwallet-Android"
             def SEP = "-"
             def flavor = variant.productFlavors[0].name
             def buildType = variant.variantData.variantConfiguration.buildType.name

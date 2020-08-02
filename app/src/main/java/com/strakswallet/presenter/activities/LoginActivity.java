@@ -278,6 +278,7 @@ public class LoginActivity extends BRActivity {
 
     private void unlockWallet() {
         pin = new StringBuilder("");
+        fingerPrint.setVisibility(View.GONE);
         offlineButtonsLayout.animate().translationY(-600).setInterpolator(new AccelerateInterpolator());
         pinLayout.animate().translationY(-2000).setInterpolator(new AccelerateInterpolator());
         enterPinLabel.animate().translationY(-1800).setInterpolator(new AccelerateInterpolator());

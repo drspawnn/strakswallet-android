@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.test.espresso.core.internal.deps.guava.base.Strings;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -22,6 +23,7 @@ import com.strakswallet.core.test.BRWalletManager;
 import com.strakswallet.presenter.activities.util.BRActivity;
 import com.strakswallet.presenter.entities.CurrencyEntity;
 import com.strakswallet.tools.animation.BRAnimator;
+import com.strakswallet.tools.manager.BRApiManager;
 import com.strakswallet.tools.manager.BRSharedPrefs;
 import com.strakswallet.tools.manager.FontManager;
 import com.strakswallet.tools.sqlite.CurrencyDataSource;
@@ -35,6 +37,8 @@ import org.eclipse.jetty.util.StringUtil;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class DisplayCurrencyActivity extends BRActivity {
@@ -50,6 +54,9 @@ public class DisplayCurrencyActivity extends BRActivity {
     private Button rightButton;
     BaseWalletManager mWalletManager;
 
+    private Timer timer;
+    private TimerTask timerTask;
+    private Handler handler;
 
     public static DisplayCurrencyActivity getApp() {
         return app;
@@ -103,26 +110,75 @@ public class DisplayCurrencyActivity extends BRActivity {
         } else {
             setButton(false);
         }
-        updateExchangeRate();
+        initializeTimerTask(this);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
+                BRApiManager.getInstance().runTimerTask();
                 TextView currencyItemText = (TextView) view.findViewById(R.id.currency_item_text);
                 final String selectedCurrency = currencyItemText.getText().toString();
                 String iso = selectedCurrency.substring(0, 3);
                 BRSharedPrefs.putPreferredFiatIso(DisplayCurrencyActivity.this, iso);
-
-                updateExchangeRate();
-
             }
 
         });
         listView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
 
+        // Find selected and focus it
+        for(int i=0;i<adapter.getCount();i++)
+            if(adapter.getItem(i).code.equals(BRSharedPrefs.getPreferredFiatIso(this)))
+            {
+                listView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                listView.setSelectionFromTop(i, listView.getMeasuredHeight()*3);
+                break;
+            }
     }
 
+    private void initializeTimerTask(final Context context) {
+        timer = new Timer();
+        handler = new Handler();
+        timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(new Runnable() {
+                    public void run() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                updateExchangeRate();
+                            }
+                        });
+                    }
+                });
+            }
+        };
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        startTimer();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        stopTimer();
+    }
+
+    public void startTimer() {
+        if (timer == null) initializeTimerTask(this);
+        timer.schedule(timerTask, 1000, 1000);
+    }
+
+    public void stopTimer() {
+        if (timer != null) {
+            timer.cancel();
+            timer=null;
+        }
+    }
     private void updateExchangeRate() {
         //set the rate from the last saved
         String iso = BRSharedPrefs.getPreferredFiatIso(this);

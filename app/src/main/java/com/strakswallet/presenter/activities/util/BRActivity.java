@@ -48,7 +48,7 @@ import com.platform.tools.BRBitId;
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-public class BRActivity extends Activity {
+public class BRActivity extends Activity implements BRApiManager.OnRateUpdate {
     private static final String TAG = BRActivity.class.getName();
     public static final Point screenParametersPoint = new Point();
 
@@ -86,7 +86,6 @@ public class BRActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
         // 201 is the qrCode result
         switch (requestCode) {
-
             case BRConstants.PAY_REQUEST_CODE:
                 if (resultCode == RESULT_OK) {
                     BRExecutor.getInstance().forLightWeightBackgroundTasks().execute(new Runnable() {
@@ -130,7 +129,8 @@ public class BRActivity extends Activity {
                         }
                     });
                 } else {
-                    finish();
+                    finishAffinity();
+                    System.exit(0);
                 }
                 break;
 
@@ -212,15 +212,22 @@ public class BRActivity extends Activity {
                 // try open scanner again
                 BRAnimator.openScanner(this);
                 break;
+
+            // Results from SecuritySettingsActivity
+            case BRConstants.SECURITY_SETTINGS_REQUEST:
+                // check again
+                WalletsMaster.getInstance(this).startTheWalletIfExists(this);
+                break;
         }
     }
 
-    public void init(Activity app) {
+    public void init(BRActivity app) {
         //set status bar color
 //        ActivityUTILS.setStatusBarColor(app, android.R.color.transparent);
         InternetManager.getInstance();
         if (!(app instanceof IntroActivity || app instanceof RecoverActivity || app instanceof WriteDownActivity))
-            BRApiManager.getInstance().startTimer(app);
+            if(WalletsMaster.getInstance(app).getAllWallets().toArray().length>0)
+                BRApiManager.getInstance().startTimer(app);
         //show wallet locked if it is
         if (!ActivityUTILS.isAppSafe(app))
             if (AuthManager.getInstance().isWalletDisabled(app))
@@ -254,4 +261,8 @@ public class BRActivity extends Activity {
 
     }
 
+    @Override
+    public void OnRateUpdate() {
+
+    }
 }

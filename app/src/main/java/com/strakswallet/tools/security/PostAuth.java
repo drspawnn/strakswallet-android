@@ -65,6 +65,7 @@ public class PostAuth {
     private String phraseForKeyStore;
     public CryptoRequest mCryptoRequest;
     public static boolean isStuckWithAuthLoop;
+    public static int maxAuthTryCount = 4;
 
     private BRCoreTransaction mPaymentProtocolTx;
     private static PostAuth instance;
@@ -86,12 +87,13 @@ public class PostAuth {
         if (success) {
             WalletsMaster.getInstance(app).initWallets(app);
             Intent intent = new Intent(app, WriteDownActivity.class);
+            intent.putExtra("firstStart", true);
             app.startActivity(intent);
             app.overridePendingTransition(R.anim.enter_from_right, R.anim.exit_to_left);
         } else {
             if (authAsked) {
                 Log.e(TAG, "onCreateWalletAuth: WARNING!!!! LOOP");
-                isStuckWithAuthLoop = true;
+                if (maxAuthTryCount <= 0) isStuckWithAuthLoop = true;
             }
             return;
         }
@@ -109,7 +111,7 @@ public class PostAuth {
         } catch (UserNotAuthenticatedException e) {
             if (authAsked) {
                 Log.e(TAG, "onPhraseCheckAuth: WARNING!!!! LOOP");
-                isStuckWithAuthLoop = true;
+                if (maxAuthTryCount <= 0) isStuckWithAuthLoop = true;
             }
             return;
         }
@@ -126,7 +128,7 @@ public class PostAuth {
         } catch (UserNotAuthenticatedException e) {
             if (authAsked) {
                 Log.e(TAG, "onPhraseProveAuth: WARNING!!!! LOOP");
-                isStuckWithAuthLoop = true;
+                if (maxAuthTryCount <= 0) isStuckWithAuthLoop = true;
             }
             return;
         }
@@ -156,8 +158,7 @@ public class PostAuth {
             } catch (UserNotAuthenticatedException e) {
                 if (authAsked) {
                     Log.e(TAG, "onRecoverWalletAuth: WARNING!!!! LOOP");
-                    isStuckWithAuthLoop = true;
-
+                    if (maxAuthTryCount <= 0) isStuckWithAuthLoop = true;
                 }
                 return;
             }
@@ -204,7 +205,7 @@ public class PostAuth {
         } catch (UserNotAuthenticatedException e) {
             if (authAsked) {
                 Log.e(TAG, "onPublishTxAuth: WARNING!!!! LOOP");
-                isStuckWithAuthLoop = true;
+                if (maxAuthTryCount <= 0) isStuckWithAuthLoop = true;
             }
             return;
         }
@@ -254,7 +255,7 @@ public class PostAuth {
         } catch (UserNotAuthenticatedException e) {
             if (authAsked) {
                 Log.e(TAG, "onPaymentProtocolRequest: WARNING!!!! LOOP");
-                isStuckWithAuthLoop = true;
+                if (maxAuthTryCount <= 0) isStuckWithAuthLoop = true;
             }
             return;
         }
@@ -297,8 +298,8 @@ public class PostAuth {
             canary = BRKeyStore.getCanary(app, BRConstants.CANARY_REQUEST_CODE);
         } catch (UserNotAuthenticatedException e) {
             if (authAsked) {
-                Log.e(TAG, "onCanaryCheck: WARNING!!!! LOOP");
-                isStuckWithAuthLoop = true;
+                Log.e(TAG, "onCanaryCheck: WARNING!!!! LOOP1");
+                if (maxAuthTryCount <= 0) isStuckWithAuthLoop = true;
             }
             return;
         }
@@ -308,8 +309,8 @@ public class PostAuth {
                 phrase = BRKeyStore.getPhrase(app, BRConstants.CANARY_REQUEST_CODE);
             } catch (UserNotAuthenticatedException e) {
                 if (authAsked) {
-                    Log.e(TAG, "onCanaryCheck: WARNING!!!! LOOP");
-                    isStuckWithAuthLoop = true;
+                    Log.e(TAG, "onCanaryCheck: WARNING!!!! LOOP2");
+                    if (maxAuthTryCount <= 0) isStuckWithAuthLoop = true;
                 }
                 return;
             }
@@ -325,8 +326,8 @@ public class PostAuth {
                     BRKeyStore.putCanary(BRConstants.CANARY_STRING, app, 0);
                 } catch (UserNotAuthenticatedException e) {
                     if (authAsked) {
-                        Log.e(TAG, "onCanaryCheck: WARNING!!!! LOOP");
-                        isStuckWithAuthLoop = true;
+                        Log.e(TAG, "onCanaryCheck: WARNING!!!! LOOP3");
+                        if (maxAuthTryCount <= 0) isStuckWithAuthLoop = true;
                     }
                     return;
                 }
@@ -334,6 +335,4 @@ public class PostAuth {
         }
         WalletsMaster.getInstance(app).startTheWalletIfExists(app);
     }
-
-
 }

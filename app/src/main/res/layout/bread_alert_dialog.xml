@@ -47,10 +47,10 @@
         android:layout_margin="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
-        android:paddingTop="26dp"
+        android:paddingTop="16dp"
         android:textAlignment="center"
         android:textSize="18sp"
-        app:customTFont="CircularPro-Bold.otf"
+        app:customTFont="SF-UI-Display-Bold.otf"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/dialog_header" />
@@ -81,7 +81,6 @@
         android:layout_marginTop="16dp"
         android:orientation="horizontal"
         android:weightSum="2.0"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/dialog_text">
@@ -96,7 +95,7 @@
             android:layout_weight="1.0"
             android:background="@android:color/transparent"
             app:buttonType="4"
-            app:customTFont="CircularPro-Bold.otf"
+            app:customTFont="SF-UI-Display-Bold.otf"
             app:hasShadow="false"
             app:isBreadButton="true" />
 
@@ -110,7 +109,7 @@
             android:background="@android:color/transparent"
             android:textColor="@color/white"
             app:buttonType="4"
-            app:customTFont="CircularPro-Bold.otf"
+            app:customTFont="SF-UI-Display-Bold.otf"
             app:hasShadow="false"
             app:isBreadButton="true" />
 

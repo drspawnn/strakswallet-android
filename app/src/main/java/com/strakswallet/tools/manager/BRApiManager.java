@@ -3,11 +3,16 @@ package com.strakswallet.tools.manager;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.NetworkOnMainThreadException;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.strakswallet.BreadApp;
+import com.strakswallet.R;
 import com.strakswallet.presenter.activities.util.ActivityUTILS;
+import com.strakswallet.presenter.activities.util.BRActivity;
+import com.strakswallet.presenter.customviews.BRToast;
 import com.strakswallet.presenter.entities.CurrencyEntity;
 import com.strakswallet.tools.sqlite.CurrencyDataSource;
 import com.strakswallet.tools.threads.executor.BRExecutor;
@@ -69,6 +74,7 @@ public class BRApiManager {
 
     private static BRApiManager instance;
     private Timer timer;
+    private OnRateUpdate listener;
 
     private TimerTask timerTask;
 
@@ -154,6 +160,7 @@ public class BRApiManager {
                                 for (BaseWalletManager w : WalletsMaster.getInstance(context).getAllWallets()) {
                                     Set<CurrencyEntity> tmp = getCurrencies((Activity) context, w);
                                     CurrencyDataSource.getInstance(context).putCurrencies(context, w.getIso(context), tmp);
+                                    if(listener!=null) listener.OnRateUpdate();
                                 }
                             }
                         });
@@ -162,16 +169,21 @@ public class BRApiManager {
             }
         };
     }
+    public void runTimerTask()
+    {
+        timerTask.run();
+    }
 
-    public void startTimer(Context context) {
+    public void startTimer(BRActivity app) {
+        listener = app;
         //set a new Timer
         if (timer != null) return;
         timer = new Timer();
         Log.e(TAG, "startTimer: started...");
         //initialize the TimerTask's job
-        initializeTimerTask(context);
+        initializeTimerTask(app);
 
-        timer.schedule(timerTask, 10000, 60000);
+        timer.schedule(timerTask, 2000, 60000);
     }
 
     public void stopTimerTask() {
@@ -182,85 +194,51 @@ public class BRApiManager {
         }
     }
 
-    public static JSONArray fetchRates(Activity activity, BaseWalletManager walletManager) {
+    public static JSONArray fetchRates(final Activity activity, BaseWalletManager walletManager) {
         StringBuilder ruse = new StringBuilder();
         String code = walletManager.getIso(activity);
-
-        ruse.append("{\"data\":[{\"code\":\"STAK\",\"name\":\"STRAKS\",\"rate\":1},");
-
-        String myURL = "https://api.straks.info/v2/price/";
-
-        String tempJsonString = urlGET(activity, myURL);
-        JSONArray jsonArray = null;
-
-        if (tempJsonString == null) {
-            Log.e(TAG, "fetchRates: failed, api.straks.info response is null");
-            return null;
-        }
-        try {
-            jsonArray = new JSONArray(tempJsonString);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        for (int i = 0; i < jsonArray.length(); i++) {
-            try {
-                JSONObject ccyEntry = jsonArray.getJSONObject(i);
-
-                ruse.append("{\"code\":\"").append(ccyEntry.getString("code"))
-                        .append("\",\"name\":\"").append(ccyEntry.getString("name"))
-                        .append("\",\"rate\":").append(Double.parseDouble(ccyEntry.getString("rate")));
-                ruse.append("},");
-            }
-            catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        ruse.append("]}");
-        String jsonString = ruse.toString();
-
-        if (jsonString == null) return null;
-        try {
-            JSONObject obj = new JSONObject(jsonString);
-
-            jsonArray = obj.getJSONArray("data");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return jsonArray == null ? backupFetchRates(activity, walletManager) : jsonArray;
-    }
-
-    public static JSONArray backupFetchRates(Activity app, BaseWalletManager walletManager) {
-        StringBuilder ruse = new StringBuilder();
-        String code = walletManager.getIso(app);
+        String selectedISO = BRSharedPrefs.getPreferredFiatIso(activity);
 
         ruse.append("{\"data\":[{\"code\":\"STAK\",\"name\":\"STRAKS\",\"rate\":1},");
 
         for (int i = 0; codes.length == names.length && i < codes.length; i++) {
+
             ruse.append("{\"code\":\"").append(codes[i]).append("\",\"name\":\"")
                     .append(names[i]).append("\",\"rate\":");
 
-            String myURL = "https://api.coinmarketcap.com/v1/ticker/straks/?convert=" + codes[i];
+            if( codes[i].equals(selectedISO)) {
 
-            String tempJsonString = urlGET(app, myURL);
-            if (tempJsonString == null) return null;
-            try {
-                JSONArray tempJsonArray = new JSONArray(tempJsonString);
-                JSONObject tempJsonObject = tempJsonArray.getJSONObject(0);
+//                String myURL = "https://api.straks.info/v2/price/";//codes[i];
 
-                String rate = tempJsonObject.getString("price_" + codes[i].toLowerCase());
+                String rate = fetchRateCMC(activity, codes[i]);
+                if (rate.equals("0")) rate = fetchRateGECKO(activity, codes[i]);
+
+                if (rate.equals("0"))
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (Utils.isEmulatorOrDebug(activity))
+                                Toast.makeText(activity, "Fetch currency rate failed!", Toast.LENGTH_SHORT).show();
+                            else
+                                BRToast.showCustomToast(activity, "Fetch currency rate failed!",
+                                        BreadApp.DISPLAY_HEIGHT_PX - 200, Toast.LENGTH_LONG, R.drawable.toast_layout_red, false);
+                        }
+                    });
+
                 ruse.append(Double.parseDouble(rate));
-                ruse.append("},");
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
+            else{
+                String rate ="0";
+                ruse.append(Double.parseDouble(rate));
+            }
+
+            if (i== codes.length-1)
+                ruse.append("}]}");
+            else
+                ruse.append("},");
         }
 
-        ruse.append("]}");
         String jsonString = ruse.toString();
-
         JSONArray jsonArray = null;
         if (jsonString == null) return null;
         try {
@@ -273,6 +251,84 @@ public class BRApiManager {
 
         return jsonArray;
     }
+
+    public static String fetchRateGECKO(Activity activity,String ticker)
+    {
+        String myURL = "https://api.coingecko.com/api/v3/simple/price?ids=straks&vs_currencies=" + ticker;
+        String tempJsonString = urlGET(activity, myURL);
+
+        if (tempJsonString == null) return "0";
+        try {
+            JSONObject tempJsonObject = new JSONObject(tempJsonString);
+            tempJsonObject = tempJsonObject.getJSONObject("straks");
+
+            return String.valueOf(tempJsonObject.getDouble(ticker.toLowerCase()));
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return "0";
+        }
+    }
+
+    public static String fetchRateCMC(Activity activity,String ticker)
+    {
+        String myURL = "https://api.coinmarketcap.com/v1/ticker/straks/?convert=" + ticker;
+        String tempJsonString = urlGET(activity, myURL);
+
+        if (tempJsonString == null) return "0";
+        try {
+            JSONArray tempJsonArray = new JSONArray(tempJsonString);
+            JSONObject tempJsonObject = tempJsonArray.getJSONObject(0);
+
+            return tempJsonObject.getString("price_" + ticker.toLowerCase());
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return "0";
+        }
+    }
+
+//    public static JSONArray backupFetchRates(Activity app, BaseWalletManager walletManager) {
+//        StringBuilder ruse = new StringBuilder();
+//        String code = walletManager.getIso(app);
+//
+//        ruse.append("{\"data\":[{\"code\":\"STAK\",\"name\":\"STRAKS\",\"rate\":1},");
+//
+//        for (int i = 0; codes.length == names.length && i < codes.length; i++) {
+//            ruse.append("{\"code\":\"").append(codes[i]).append("\",\"name\":\"")
+//                    .append(names[i]).append("\",\"rate\":");
+//
+//            String myURL = "https://api.coinmarketcap.com/v1/ticker/straks/?convert=" + codes[i];
+//
+//            String tempJsonString = urlGET(app, myURL);
+//            if (tempJsonString == null) return null;
+//            try {
+//                JSONArray tempJsonArray = new JSONArray(tempJsonString);
+//                JSONObject tempJsonObject = tempJsonArray.getJSONObject(0);
+//
+//                String rate = tempJsonObject.getString("price_" + codes[i].toLowerCase());
+//                ruse.append(Double.parseDouble(rate));
+//                ruse.append("},");
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        ruse.append("]}");
+//        String jsonString = ruse.toString();
+//
+//        JSONArray jsonArray = null;
+//        if (jsonString == null) return null;
+//        try {
+//            JSONObject obj = new JSONObject(jsonString);
+//
+//            jsonArray = obj.getJSONArray("data");
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+//
+//        return jsonArray;
+//    }
 
     public static void updateFeePerKb(Context app) {
         WalletsMaster wm = WalletsMaster.getInstance(app);
@@ -316,11 +372,12 @@ public class BRApiManager {
                 Log.e(TAG, "urlGET: strDate is null!");
                 return response;
             }
-            SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
-            Date date = formatter.parse(strDate);
-            long timeStamp = date.getTime();
+//            SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+//            Date date = formatter.parse(strDate);
+//            long timeStamp = date.getTime();
+            long timeStamp = System.currentTimeMillis();
             BRSharedPrefs.putSecureTime(app, timeStamp);
-        } catch (ParseException | IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         } finally {
             if (resp != null) resp.close();
@@ -329,4 +386,7 @@ public class BRApiManager {
         return response;
     }
 
+    public interface OnRateUpdate {
+        void OnRateUpdate();
+    }
 }

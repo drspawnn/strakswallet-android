@@ -65,6 +65,7 @@ public class FragmentFingerprint extends Fragment
     public static final int ANIMATION_DURATION = 300;
     private String customTitle;
     private String customMessage;
+    private boolean showSecondButton=true;
 
     FingerprintUiHelper.FingerprintUiHelperBuilder mFingerprintUiHelperBuilder;
 
@@ -124,14 +125,16 @@ public class FragmentFingerprint extends Fragment
         mCancelButton.setText(R.string.Button_cancel);
         mSecondDialogButton.setText(getString(R.string.Prompts_TouchId_usePin_android));
         mFingerprintContent.setVisibility(View.VISIBLE);
-        mSecondDialogButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!BRAnimator.isClickAllowed()) return;
-                closeMe();
-                goToBackup();
-            }
-        });
+        if(showSecondButton)
+            mSecondDialogButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (!BRAnimator.isClickAllowed()) return;
+                    closeMe();
+                    goToBackup();
+                }
+            });
+        else mSecondDialogButton.setVisibility(View.GONE);
 
         return v;
     }
@@ -209,6 +212,8 @@ public class FragmentFingerprint extends Fragment
     public void setCompletion(BRAuthCompletion completion) {
         this.completion = completion;
     }
+
+    public void setShowSecondButton(boolean show){ showSecondButton = show;}
 
     @Override
     public void onError() {

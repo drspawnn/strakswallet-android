@@ -52,6 +52,7 @@
         android:largeHeap="true"
         android:launchMode="singleTask"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme.Splash"
         android:windowSoftInputMode="stateVisible|adjustResize">
 
